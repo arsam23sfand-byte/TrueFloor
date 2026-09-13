@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torne Carpet — See It In Your Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --linen:#F1ECE3;
+    --linen-deep:#E7DFD1;
+    --ink:#2B2420;
+    --ink-soft:#5B5248;
+    --indigo:#2F4858;
+    --gold:#C9A227;
+    --line:#D8CDB9;
+    --white:#FFFDF9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--linen);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    margin:0 0 .3em;
+    letter-spacing:-0.01em;
+  }
+  .wrap{
+    max-width:960px;
+    margin:0 auto;
+    padding:48px 24px 96px;
+  }
+  header.top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    padding-bottom:20px;
+    margin-bottom:40px;
+  }
+  header.top .mark{
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    font-weight:600;
+  }
+  header.top .mark span{color:var(--indigo);}
+  header.top p{margin:0;color:var(--ink-soft);font-size:14px;}
+
+  .hero{margin-bottom:56px;}
+  .hero h1{font-size:40px;max-width:600px;}
+  .hero p{color:var(--ink-soft);max-width:520px;font-size:16px;}
+
+  .step{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:32px;
+    margin-bottom:28px;
+  }
+  .step-head{
+    display:flex;
+    gap:16px;
+    align-items:baseline;
+    margin-bottom:20px;
+  }
+  .step-num{
+    font-family:'Fraunces', serif;
+    font-size:15px;
+    color:var(--indigo);
+    border:1px solid var(--indigo);
+    border-radius:50%;
+    width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .step-head h2{font-size:20px;}
+  .step-body{padding-left:42px;}
+
+  .drop{
+    border:1.5px dashed var(--line);
+    border-radius:2px;
+    padding:36px;
+    text-align:center;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .drop:hover, .drop.drag{
+    border-color:var(--indigo);
+    background:var(--linen);
+  }
+  .drop input{display:none;}
+  .drop .cta{
+    display:inline-block;
+    margin-top:10px;
+    font-size:14px;
+    color:var(--indigo);
+    font-weight:500;
+  }
+
+  .dims{display:flex;gap:20px;flex-wrap:wrap;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:13px;color:var(--ink-soft);}
+  .field input{
+    width:140px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:2px;
+    font-family:'Work Sans',sans-serif;
+    font-size:15px;
+    background:var(--white);
+    color:var(--ink);
+  }
+  .field input:focus{outline:2px solid var(--indigo);outline-offset:1px;}
+  .field .unit{font-size:12px;color:var(--ink-soft);}
+
+  .swatches{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+    gap:14px;
+  }
+  .swatch{
+    border:1.5px solid var(--line);
+    border-radius:2px;
+    padding:8px;
+    cursor:pointer;
+    background:var(--white);
+    text-align:left;
+  }
+  .swatch img{
+    width:100%;
+    height:90px;
+    object-fit:cover;
+    display:block;
+    border-radius:1px;
+  }
+  .swatch .name{font-size:13px;font-weight:500;margin-top:8px;}
+  .swatch .size{font-size:12px;color:var(--ink-soft);}
+  .swatch.selected{
+    border-color:var(--indigo);
+    box-shadow:0 0 0 1px var(--indigo);
+  }
+  .swatch .fit{
+    display:inline-block;
+    margin-top:4px;
+    font-size:11px;
+    padding:2px 6px;
+    border-radius:10px;
+  }
+  .fit.good{background:#E4EEE7;color:#2F6B44;}
+  .fit.tight{background:#F4E9D8;color:#8A5A17;}
+
+  .stage{
+    position:relative;
+    display:inline-block;
+    max-width:100%;
+    background:var(--linen-deep);
+    border:1px solid var(--line);
+  }
+  .stage canvas{display:block;max-width:100%;height:auto;}
+  .handle{
+    position:absolute;
+    width:16px;height:16px;
+    margin-left:-8px;margin-top:-8px;
+    border-radius:50%;
+    background:var(--white);
+    border:2px solid var(--indigo);
+    cursor:grab;
+    touch-action:none;
+  }
+  .handle:active{cursor:grabbing;}
+
+  .controls-row{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  button{
+    font-family:'Work Sans',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    padding:11px 20px;
+    border-radius:2px;
+    border:1px solid var(--indigo);
+    background:var(--indigo);
+    color:var(--white);
+    cursor:pointer;
+  }
+  button.secondary{
+    background:transparent;
+    color:var(--indigo);
+  }
+  button:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+  }
+  .hint{font-size:13px;color:var(--ink-soft);margin-top:10px;}
+  .empty{
+    color:var(--ink-soft);
+    font-size:14px;
+    padding:20px 0;
+  }
+  .opacity-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-soft);}
+  .opacity-row input[type=range]{width:140px;}
+
+  footer.note{
+    margin-top:40px;
+    font-size:13px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--line);
+    padding-top:20px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="mark">Torne<span>Carpet</span></div>
+    <p>See it in your room</p>
+  </header>
+
+  <div class="hero">
+    <h1>Try a carpet in your own room before you order.</h1>
+    <p>Upload a photo of the room, tell us its size, choose one of our designs, then drag it onto your floor to line up the perspective.</p>
+  </div>
+
+  <!-- STEP 1: PHOTO -->
+  <div class="step">
+    <div class="step-head"><div class="step-num">1</div><h2>Upload a photo of the room</h2></div>
+    <div class="step-body">
+      <div class="drop" id="dropZone">
+        <div id="dropLabel">Drag a photo here, or click to choose one</div>
+        <div class="cta">Choose photo</div>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      <p class="hint">A photo taken roughly straight-on, with the floor visible, works best.</p>
+    </div>
+  </div>
+
+  <!-- STEP 2: DIMENSIONS -->
+  <div class="step">
+    <div class="step-head"><div class="step-num">2</div><h2>Room dimensions</h2></div>
+    <div class="step-body">
+      <div class="dims">
+        <div class="field">
+          <label for="roomWidth">Width</label>
+          <input type="number" id="roomWidth" step="0.1" min="0" placeholder="e.g. 3.5">
+          <span class="unit">metres</span>
+        </div>
+        <div class="field">
+          <label for="roomLength">Length</label>
+          <input type="number" id="roomLength" step="0.1" min="0" placeholder="e.g. 4.2">
+          <span class="unit">metres</span>
+        </div>
+        <div class="field">
+          <label for="roomHeight">Height</label>
+          <input type="number" id="roomHeight" step="0.1" min="0" placeholder="e.g. 2.4">
+          <span class="unit">metres (optional)</span>
+        </div>
+      </div>
+      <p class="hint">We use width and length to flag carpets that will comfortably fit the room.</p>
+    </div>
+  </div>
+
+  <!-- STEP 3: CARPET PICKER -->
+  <div class="step">
+    <div class="step-head"><div class="step-num">3</div><h2>Choose a carpet</h2></div>
+    <div class="step-body">
+      <div class="swatches" id="swatchGrid"></div>
+      <p class="hint">Placeholder patterns shown here — swap in real photos of your mother's carpets by editing the <code>CARPETS</code> list in the code.</p>
+    </div>
+  </div>
+
+  <!-- STEP 4: PLACE -->
+  <div class="step">
+    <div class="step-head"><div class="step-num">4</div><h2>Place it in the room</h2></div>
+    <div class="step-body">
+      <div id="stageEmpty" class="empty">Upload a room photo and pick a carpet above to start placing it.</div>
+      <div class="stage" id="stage" style="display:none;">
+        <canvas id="canvas"></canvas>
+        <div class="handle" id="h0"></div>
+        <div class="handle" id="h1"></div>
+        <div class="handle" id="h2"></div>
+        <div class="handle" id="h3"></div>
+      </div>
+      <div class="controls-row" id="stageControls" style="display:none;">
+        <button class="secondary" id="resetBtn">Reset placement</button>
+        <button id="downloadBtn">Download image</button>
+        <div class="opacity-row">
+          <label for="opacitySlider">Blend</label>
+          <input type="range" id="opacitySlider" min="0.5" max="1" step="0.01" value="0.95">
+        </div>
+      </div>
+      <p class="hint">Drag the four corner dots so they sit on the four corners of your floor area — the carpet will warp to match the room's perspective.</p>
+    </div>
+  </div>
+
+  <footer class="note">
+    Prototype — placement is done by hand for accurate, believable perspective. An automatic "AI places it for you" step can be added later using an image-editing model on the server.
+  </footer>
+
+</div>
+
+<script>
+// ---------- Placeholder carpet catalogue ----------
+// Replace `img` with real photographed carpet textures (top-down, evenly lit) when available.
+function svgSwatch(bg, pattern){
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'>
+    <rect width='240' height='240' fill='${bg}'/>${pattern}
+  </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+const CARPETS = [
+  {
+    name:'Aegean Weave', w:2.4, l:3.4,
+    img: svgSwatch('#2F4858', `<g stroke='#C9A227' stroke-width='4' opacity='0.55'>
+      ${Array.from({length:12}).map((_,i)=>`<line x1='${i*22}' y1='0' x2='${i*22}' y2='240'/>`).join('')}
+    </g>`)
+  },
+  {
+    name:'Amber Loom', w:2.0, l:3.0,
+    img: svgSwatch('#C9A227', `<g fill='#2B2420' opacity='0.5'>
+      ${Array.from({length:6}).map((_,r)=>Array.from({length:6}).map((_,c)=>
+        `<rect x='${c*40+4}' y='${r*40+4}' width='32' height='32' rx='3'/>`).join('')).join('')}
+    </g>`)
+  },
+  {
+    name:'Charcoal Trellis', w:2.7, l:3.7,
+    img: svgSwatch('#3A342E', `<g stroke='#F1ECE3' stroke-width='3' fill='none' opacity='0.45'>
+      ${Array.from({length:8}).map((_,i)=>`<path d='M${i*30-40} 0 L${i*30+40} 240'/>`).join('')}
+      ${Array.from({length:8}).map((_,i)=>`<path d='M${i*30-40} 240 L${i*30+40} 0'/>`).join('')}
+    </g>`)
+  },
+  {
+    name:'Sable Border', w:3.0, l:4.0,
+    img: svgSwatch('#5B5248', `<rect x='16' y='16' width='208' height='208' fill='none' stroke='#F1ECE3' stroke-width='6' opacity='0.6'/>
+      <rect x='36' y='36' width='168' height='168' fill='none' stroke='#C9A227' stroke-width='3' opacity='0.6'/>`)
+  }
+];
+
+// ---------- State ----------
+let roomImg = null;       // HTMLImageElement of uploaded room photo
+let selectedCarpet = null;
+let carpetImg = null;     // loaded Image() of chosen carpet
+let quad = null;          // 4 {x,y} points in canvas pixel space, order TL,TR,BR,BL
+let dragging = null;
+let canvasW = 0, canvasH = 0;
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const stage = document.getElementById('stage');
+const stageEmpty = document.getElementById('stageEmpty');
+const stageControls = document.getElementById('stageControls');
+const handles = [0,1,2,3].map(i => document.getElementById('h'+i));
+const opacitySlider = document.getElementById('opacitySlider');
+
+// ---------- Step 1: photo upload ----------
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const dropLabel = document.getElementById('dropLabel');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag');
+  if (e.dataTransfer.files[0]) loadRoomPhoto(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) loadRoomPhoto(e.target.files[0]);
+});
+
+function loadRoomPhoto(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      roomImg = img;
+      dropLabel.textContent = file.name + ' — click to change';
+      trySetupStage();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ---------- Step 2: dimensions ----------
+const roomWidthInput = document.getElementById('roomWidth');
+const roomLengthInput = document.getElementById('roomLength');
+[roomWidthInput, roomLengthInput].forEach(el => el.addEventListener('input', renderSwatchFit));
+
+// ---------- Step 3: carpet swatches ----------
+const swatchGrid = document.getElementById('swatchGrid');
+function renderSwatches(){
+  swatchGrid.innerHTML = '';
+  CARPETS.forEach((c, idx) => {
+    const div = document.createElement('div');
+    div.className = 'swatch' + (selectedCarpet === idx ? ' selected' : '');
+    div.innerHTML = `
+      <img src="${c.img}" alt="${c.name}">
+      <div class="name">${c.name}</div>
+      <div class="size">${c.w}m × ${c.l}m</div>
+      <div class="fit-slot"></div>
+    `;
+    div.addEventListener('click', () => {
+      selectedCarpet = idx;
+      const img = new Image();
+      img.onload = () => { carpetImg = img; trySetupStage(); };
+      img.src = c.img;
+      renderSwatches();
+    });
+    swatchGrid.appendChild(div);
+  });
+  renderSwatchFit();
+}
+function renderSwatchFit(){
+  const rw = parseFloat(roomWidthInput.value);
+  const rl = parseFloat(roomLengthInput.value);
+  const cards = swatchGrid.querySelectorAll('.swatch');
+  cards.forEach((card, idx) => {
+    const slot = card.querySelector('.fit-slot');
+    if (!rw || !rl){ slot.innerHTML = ''; return; }
+    const c = CARPETS[idx];
+    const margin = 0.4; // leave floor showing around the rug
+    const fits = c.w <= rw - margin && c.l <= rl - margin;
+    const tight = !fits && c.w <= rw && c.l <= rl;
+    if (fits) slot.innerHTML = '<span class="fit good">Fits comfortably</span>';
+    else if (tight) slot.innerHTML = '<span class="fit tight">Tight fit</span>';
+    else slot.innerHTML = '<span class="fit tight">Too large for this room</span>';
+  });
+}
+renderSwatches();
+
+// ---------- Step 4: stage / placement ----------
+function trySetupStage(){
+  if (!roomImg || !carpetImg) return;
+  stageEmpty.style.display = 'none';
+  stage.style.display = 'inline-block';
+  stageControls.style.display = 'flex';
+
+  const maxW = 880;
+  const scale = Math.min(1, maxW / roomImg.naturalWidth);
+  canvasW = Math.round(roomImg.naturalWidth * scale);
+  canvasH = Math.round(roomImg.naturalHeight * scale);
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  stage.style.width = canvasW + 'px';
+  stage.style.height = canvasH + 'px';
+
+  // default trapezoid: roughly the lower-middle of the photo
+  quad = [
+    {x: canvasW*0.30, y: canvasH*0.55}, // TL
+    {x: canvasW*0.70, y: canvasH*0.55}, // TR
+    {x: canvasW*0.88, y: canvasH*0.90}, // BR
+    {x: canvasW*0.12, y: canvasH*0.90}, // BL
+  ];
+  positionHandles();
+  render();
+}
+
+function positionHandles(){
+  const rect = stage.getBoundingClientRect();
+  // handles are absolutely positioned relative to .stage, using canvas's own pixel size
+  // since canvas is drawn at canvasW/canvasH and CSS may scale it, map accordingly
+  const cssScaleX = rect.width / canvasW;
+  const cssScaleY = rect.height / canvasH;
+  quad.forEach((p, i) => {
+    handles[i].style.left = (p.x * cssScaleX) + 'px';
+    handles[i].style.top = (p.y * cssScaleY) + 'px';
+  });
+}
+
+handles.forEach((h, i) => {
+  h.addEventListener('pointerdown', e => {
+    dragging = i;
+    h.setPointerCapture(e.pointerId);
+  });
+  h.addEventListener('pointermove', e => {
+    if (dragging !== i) return;
+    const rect = stage.getBoundingClientRect();
+    const cssScaleX = rect.width / canvasW;
+    const cssScaleY = rect.height / canvasH;
+    let x = (e.clientX - rect.left) / cssScaleX;
+    let y = (e.clientY - rect.top) / cssScaleY;
+    x = Math.max(0, Math.min(canvasW, x));
+    y = Math.max(0, Math.min(canvasH, y));
+    quad[i] = {x, y};
+    positionHandles();
+    render();
+  });
+  h.addEventListener('pointerup', () => { dragging = null; });
+});
+
+window.addEventListener('resize', () => { if (roomImg && carpetImg) positionHandles(); });
+
+document.getElementById('resetBtn').addEventListener('click', () => { trySetupStage(); });
+opacitySlider.addEventListener('input', render);
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'torne-carpet-preview.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+// ---------- Homography: map unit square (0,0)-(1,0)-(1,1)-(0,1) to quad, then invert ----------
+function computeSquareToQuad(dst){
+  const x0=dst[0].x, y0=dst[0].y, x1=dst[1].x, y1=dst[1].y,
+        x2=dst[2].x, y2=dst[2].y, x3=dst[3].x, y3=dst[3].y;
+  const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3;
+  const dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+
+  let a,b,c,d,e,f,g,h,i;
+  if (Math.abs(dx3) < 1e-9 && Math.abs(dy3) < 1e-9){
+    a = x1-x0; b = x2-x1; c = x0;
+    d = y1-y0; e = y2-y1; f = y0;
+    g = 0; h = 0; i = 1;
+  } else {
+    const denom = dx1*dy2 - dx2*dy1;
+    g = (dx3*dy2 - dx2*dy3) / denom;
+    h = (dx1*dy3 - dx3*dy1) / denom;
+    i = 1;
+    a = x1 - x0 + g*x1;
+    b = x3 - x0 + h*x3;
+    c = x0;
+    d = y1 - y0 + g*y1;
+    e = y3 - y0 + h*y3;
+    f = y0;
+  }
+  return [a,b,c, d,e,f, g,h,i];
+}
+function invert3x3(m){
+  const [a,b,c,d,e,f,g,h,i] = m;
+  const A = e*i - f*h, B = -(d*i - f*g), C = d*h - e*g;
+  const D = -(b*i - c*h), E = a*i - c*g, F = -(a*h - b*g);
+  const G = b*f - c*e, H = -(a*f - c*d), I = a*e - b*d;
+  const det = a*A + b*B + c*C;
+  return [A/det, D/det, G/det, B/det, E/det, H/det, C/det, F/det, I/det];
+}
+function applyMat(m, x, y){
+  const X = m[0]*x + m[1]*y + m[2];
+  const Y = m[3]*x + m[4]*y + m[5];
+  const W = m[6]*x + m[7]*y + m[8];
+  return [X/W, Y/W];
+}
+
+function render(){
+  ctx.clearRect(0,0,canvasW,canvasH);
+  ctx.drawImage(roomImg, 0, 0, canvasW, canvasH);
+  if (!carpetImg || !quad) return;
+
+  // Draw carpet onto an offscreen canvas at its natural size, then warp per destination pixel.
+  const off = document.createElement('canvas');
+  off.width = carpetImg.naturalWidth;
+  off.height = carpetImg.naturalHeight;
+  const offCtx = off.getContext('2d');
+  offCtx.drawImage(carpetImg, 0, 0);
+  const srcData = offCtx.getImageData(0,0,off.width, off.height).data;
+  const srcW = off.width, srcH = off.height;
+
+  const fwd = computeSquareToQuad(quad);   // unit square -> quad
+  const inv = invert3x3(fwd);              // quad -> unit square
+
+  const xs = quad.map(p=>p.x), ys = quad.map(p=>p.y);
+  const minX = Math.max(0, Math.floor(Math.min(...xs)));
+  const maxX = Math.min(canvasW, Math.ceil(Math.max(...xs)));
+  const minY = Math.max(0, Math.floor(Math.min(...ys)));
+  const maxY = Math.min(canvasH, Math.ceil(Math.max(...ys)));
+
+  const destImg = ctx.getImageData(minX, minY, maxX-minX, maxY-minY);
+  const dData = destImg.data;
+  const dW = maxX - minX, dH = maxY - minY;
+  const alpha = parseFloat(opacitySlider.value);
+
+  for (let y = 0; y < dH; y++){
+    for (let x = 0; x < dW; x++){
+      const cx = minX + x, cy = minY + y;
+      const [u, v] = applyMat(inv, cx, cy);
+      if (u < 0 || u > 1 || v < 0 || v > 1) continue;
+      const sx = Math.min(srcW-1, Math.max(0, Math.floor(u * srcW)));
+      const sy = Math.min(srcH-1, Math.max(0, Math.floor(v * srcH)));
+      const sIdx = (sy*srcW + sx) * 4;
+      const dIdx = (y*dW + x) * 4;
+      const sr = srcData[sIdx], sg = srcData[sIdx+1], sb = srcData[sIdx+2];
+      dData[dIdx]   = dData[dIdx]   * (1-alpha) + sr * alpha;
+      dData[dIdx+1] = dData[dIdx+1] * (1-alpha) + sg * alpha;
+      dData[dIdx+2] = dData[dIdx+2] * (1-alpha) + sb * alpha;
+    }
+  }
+  ctx.putImageData(destImg, minX, minY);
+}
+</script>
+</body>
+</html>
