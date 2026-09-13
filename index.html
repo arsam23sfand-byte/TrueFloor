@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Torne Carpet — See It In Your Room</title>
+<title>TrueFloor — See It In Your Room</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -224,7 +224,7 @@
 <div class="wrap">
 
   <header class="top">
-    <div class="mark">Torne<span>Carpet</span></div>
+    <div class="mark">True<span>Floor</span></div>
     <p>See it in your room</p>
   </header>
 
@@ -301,6 +301,21 @@
         </div>
       </div>
       <p class="hint">Drag the four corner dots so they sit on the four corners of your floor area — the carpet will warp to match the room's perspective.</p>
+    </div>
+  </div>
+
+  <!-- STEP 5: AI AUTO-PLACEMENT -->
+  <div class="step" id="aiStep" style="display:none;">
+    <div class="step-head"><div class="step-num">5</div><h2>Or let AI place it for you</h2></div>
+    <div class="step-body">
+      <button id="aiPlaceBtn">Let AI place it</button>
+      <p class="hint" id="aiStatus"></p>
+      <div id="aiResultWrap" style="display:none;margin-top:16px;">
+        <img id="aiResultImg" style="max-width:100%;border:1px solid var(--line);display:block;">
+        <div class="controls-row">
+          <button id="aiDownloadBtn" class="secondary">Download AI result</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -447,6 +462,7 @@ function trySetupStage(){
   stageEmpty.style.display = 'none';
   stage.style.display = 'inline-block';
   stageControls.style.display = 'flex';
+  document.getElementById('aiStep').style.display = 'block';
 
   const maxW = 880;
   const scale = Math.min(1, maxW / roomImg.naturalWidth);
@@ -508,7 +524,7 @@ opacitySlider.addEventListener('input', render);
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
   const link = document.createElement('a');
-  link.download = 'torne-carpet-preview.png';
+  link.download = 'truefloor-preview.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
 });
@@ -599,6 +615,73 @@ function render(){
   }
   ctx.putImageData(destImg, minX, minY);
 }
+
+// ---------- Step 5: AI auto-placement ----------
+function imageElementToBase64Png(img){
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  c.getContext('2d').drawImage(img, 0, 0);
+  const dataUrl = c.toDataURL('image/png');
+  return dataUrl.split(',')[1]; // strip the "data:image/png;base64," prefix
+}
+
+const aiPlaceBtn = document.getElementById('aiPlaceBtn');
+const aiStatus = document.getElementById('aiStatus');
+const aiResultWrap = document.getElementById('aiResultWrap');
+const aiResultImg = document.getElementById('aiResultImg');
+
+aiPlaceBtn.addEventListener('click', async () => {
+  if (!roomImg || !carpetImg) return;
+  aiPlaceBtn.disabled = true;
+  aiStatus.textContent = 'Sending your photo and carpet to the AI — this can take up to 30 seconds…';
+  aiResultWrap.style.display = 'none';
+
+  try {
+    const roomImageBase64 = imageElementToBase64Png(roomImg);
+    const carpetImageBase64 = imageElementToBase64Png(carpetImg);
+
+    const res = await fetch('/.netlify/functions/place-carpet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomImageBase64, carpetImageBase64 })
+    });
+
+    if (!res.ok) {
+      throw new Error('Server responded with ' + res.status);
+    }
+
+    const data = await res.json();
+
+    // Gemini returns candidates[0].content.parts[] — find the part with inline_data (the generated image)
+    const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content
+      ? data.candidates[0].content.parts : [];
+    const imagePart = (parts || []).find(p => p.inline_data || p.inlineData);
+
+    if (!imagePart) {
+      console.log('Full response:', data);
+      throw new Error('No image came back from the AI. Check the browser console for the full response.');
+    }
+
+    const inline = imagePart.inline_data || imagePart.inlineData;
+    const mime = inline.mime_type || inline.mimeType || 'image/png';
+    aiResultImg.src = `data:${mime};base64,${inline.data}`;
+    aiResultWrap.style.display = 'block';
+    aiStatus.textContent = 'Done — here is the AI-placed result.';
+  } catch (err) {
+    console.error(err);
+    aiStatus.textContent = 'Something went wrong: ' + err.message;
+  } finally {
+    aiPlaceBtn.disabled = false;
+  }
+});
+
+document.getElementById('aiDownloadBtn').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'truefloor-ai-preview.png';
+  link.href = aiResultImg.src;
+  link.click();
+});
 </script>
 </body>
 </html>
